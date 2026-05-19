@@ -28,6 +28,8 @@
                         <TextBox x:Name="TextBoxAz" Text="z" Width="190"/>
                     </StackPanel>
 
+                    <TextBlock x:Name="ErrorText" Foreground="Red" FontWeight="Bold" Margin="0,5" TextWrapping="Wrap"/>
+
                     <Separator Margin="0,15"/>
 
                     <TextBlock Text="2. Поверхности (9 квадрик):" FontWeight="Bold" Margin="0,5"/>

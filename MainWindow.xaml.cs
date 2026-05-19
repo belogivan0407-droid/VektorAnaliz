@@ -17,6 +17,10 @@ namespace Vektoranaliz
         private WpfMedia.ModelVisual3D currentVectorMarker = null;
         private WpfMedia.ModelVisual3D currentContourMarker = null;
 
+        // Явное указание NCalc.Expression исключает конфликт со стандартным System.Windows.Expression
+        private NCalc.Expression exprX, exprY, exprZ;
+        private bool isFieldValid = false;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -35,54 +39,88 @@ namespace Vektoranaliz
             return wMesh;
         }
 
-        // Универсальный генератор индексов сетки для полигонов
-        private void BuildGridIndices(WpfMedia.MeshGeometry3D wMesh, int uRes, int vRes)
+        // Универсальный генератор индексов сетки с поддержкой изменения направления обхода (для ориентации нормалей)
+        private void BuildGridIndices(WpfMedia.MeshGeometry3D wMesh, int uRes, int vRes, bool reverseWinding = false, int offset = 0)
         {
             for (int i = 0; i < uRes; i++)
             {
                 for (int j = 0; j < vRes; j++)
                 {
-                    int p1 = i * (vRes + 1) + j;
+                    int p1 = offset + i * (vRes + 1) + j;
                     int p2 = p1 + 1;
-                    int p3 = (i + 1) * (vRes + 1) + j;
+                    int p3 = offset + (i + 1) * (vRes + 1) + j;
                     int p4 = p3 + 1;
 
-                    wMesh.TriangleIndices.Add(p1);
-                    wMesh.TriangleIndices.Add(p3);
-                    wMesh.TriangleIndices.Add(p2);
+                    if (reverseWinding)
+                    {
+                        // Обход по часовой стрелке
+                        wMesh.TriangleIndices.Add(p1);
+                        wMesh.TriangleIndices.Add(p3);
+                        wMesh.TriangleIndices.Add(p2);
 
-                    wMesh.TriangleIndices.Add(p2);
-                    wMesh.TriangleIndices.Add(p3);
-                    wMesh.TriangleIndices.Add(p4);
+                        wMesh.TriangleIndices.Add(p2);
+                        wMesh.TriangleIndices.Add(p3);
+                        wMesh.TriangleIndices.Add(p4);
+                    }
+                    else
+                    {
+                        // Обход против часовой стрелки
+                        wMesh.TriangleIndices.Add(p1);
+                        wMesh.TriangleIndices.Add(p2);
+                        wMesh.TriangleIndices.Add(p3);
+
+                        wMesh.TriangleIndices.Add(p2);
+                        wMesh.TriangleIndices.Add(p4);
+                        wMesh.TriangleIndices.Add(p3);
+                    }
                 }
             }
         }
 
         // --- ПАРСИНГ ВЕКТОРНОГО ПОЛЯ ---
-        private WpfMedia.Vector3D EvaluateVectorField(double x, double y, double z)
+        private bool UpdateVectorFieldExpressions()
         {
             try
             {
+                exprX = new NCalc.Expression(TextBoxAx.Text);
+                exprY = new NCalc.Expression(TextBoxAy.Text);
+                exprZ = new NCalc.Expression(TextBoxAz.Text);
+
+                isFieldValid = true;
+                EvaluateVectorField(0, 0, 0); // Тестовый расчет для валидации формулы
+
+                ErrorText.Text = "";
+                return true;
+            }
+            catch
+            {
+                ErrorText.Text = "Ошибка в формуле поля! Проверьте синтаксис (например: x * y, а не xy)";
+                FluxResult.Text = "Ф = ---";
+                isFieldValid = false;
+                return false;
+            }
+        }
+
+        private WpfMedia.Vector3D EvaluateVectorField(double x, double y, double z)
+        {
+            if (!isFieldValid) return new WpfMedia.Vector3D(0, 0, 0);
+
+            try
+            {
+                exprX.Parameters["x"] = x; exprX.Parameters["y"] = y; exprX.Parameters["z"] = z;
+                exprY.Parameters["x"] = x; exprY.Parameters["y"] = y; exprY.Parameters["z"] = z;
+                exprZ.Parameters["x"] = x; exprZ.Parameters["y"] = y; exprZ.Parameters["z"] = z;
+
                 return new WpfMedia.Vector3D(
-                    EvaluateExpression(TextBoxAx.Text, x, y, z),
-                    EvaluateExpression(TextBoxAy.Text, x, y, z),
-                    EvaluateExpression(TextBoxAz.Text, x, y, z)
+                    Convert.ToDouble(exprX.Evaluate()),
+                    Convert.ToDouble(exprY.Evaluate()),
+                    Convert.ToDouble(exprZ.Evaluate())
                 );
             }
             catch
             {
                 return new WpfMedia.Vector3D(0, 0, 0);
             }
-        }
-
-        private double EvaluateExpression(string expression, double x, double y, double z)
-        {
-            var expr = new NCalc.Expression(expression);
-            expr.Parameters["x"] = x;
-            expr.Parameters["y"] = y;
-            expr.Parameters["z"] = z;
-
-            return Convert.ToDouble(expr.Evaluate());
         }
 
         // --- ГЕНЕРАЦИЯ 9 КВАДРИК ВТОРОГО ПОРЯДКА ---
@@ -105,7 +143,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-            BuildGridIndices(wMesh, uRes, vRes);
+            BuildGridIndices(wMesh, uRes, vRes, true); // Разворачиваем нормали наружу
             SetupNewSurface(wMesh);
         }
 
@@ -127,7 +165,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-            BuildGridIndices(wMesh, uRes, vRes);
+            BuildGridIndices(wMesh, uRes, vRes, false);
             SetupNewSurface(wMesh);
         }
 
@@ -151,7 +189,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-            BuildGridIndices(wMesh, uRes, vRes);
+            BuildGridIndices(wMesh, uRes, vRes, false);
 
             int offset = wMesh.Positions.Count;
 
@@ -168,25 +206,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-
-            for (int i = 0; i < uRes; i++)
-            {
-                for (int j = 0; j < vRes; j++)
-                {
-                    int p1 = offset + i * (vRes + 1) + j;
-                    int p2 = p1 + 1;
-                    int p3 = offset + (i + 1) * (vRes + 1) + j;
-                    int p4 = p3 + 1;
-
-                    wMesh.TriangleIndices.Add(p1);
-                    wMesh.TriangleIndices.Add(p3);
-                    wMesh.TriangleIndices.Add(p2);
-
-                    wMesh.TriangleIndices.Add(p2);
-                    wMesh.TriangleIndices.Add(p3);
-                    wMesh.TriangleIndices.Add(p4);
-                }
-            }
+            BuildGridIndices(wMesh, uRes, vRes, true, offset); // Разворачиваем нижнюю полость
             SetupNewSurface(wMesh);
         }
 
@@ -208,7 +228,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-            BuildGridIndices(wMesh, uRes, vRes);
+            BuildGridIndices(wMesh, uRes, vRes, false);
             SetupNewSurface(wMesh);
         }
 
@@ -231,8 +251,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-
-            BuildGridIndices(wMesh, resolution, resolution);
+            BuildGridIndices(wMesh, resolution, resolution, false);
             SetupNewSurface(wMesh);
         }
 
@@ -252,7 +271,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-            BuildGridIndices(wMesh, uRes, vRes);
+            BuildGridIndices(wMesh, uRes, vRes, false);
             SetupNewSurface(wMesh);
         }
 
@@ -273,7 +292,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-            BuildGridIndices(wMesh, uRes, vRes);
+            BuildGridIndices(wMesh, uRes, vRes, false);
             SetupNewSurface(wMesh);
         }
 
@@ -296,7 +315,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-            BuildGridIndices(wMesh, uRes, vRes);
+            BuildGridIndices(wMesh, uRes, vRes, true);
 
             int offset = wMesh.Positions.Count;
 
@@ -312,25 +331,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-
-            for (int i = 0; i < uRes; i++)
-            {
-                for (int j = 0; j < vRes; j++)
-                {
-                    int p1 = offset + i * (vRes + 1) + j;
-                    int p2 = p1 + 1;
-                    int p3 = offset + (i + 1) * (vRes + 1) + j;
-                    int p4 = p3 + 1;
-
-                    wMesh.TriangleIndices.Add(p1);
-                    wMesh.TriangleIndices.Add(p3);
-                    wMesh.TriangleIndices.Add(p2);
-
-                    wMesh.TriangleIndices.Add(p2);
-                    wMesh.TriangleIndices.Add(p3);
-                    wMesh.TriangleIndices.Add(p4);
-                }
-            }
+            BuildGridIndices(wMesh, uRes, vRes, false, offset);
             SetupNewSurface(wMesh);
         }
 
@@ -350,7 +351,7 @@ namespace Vektoranaliz
                     wMesh.Positions.Add(new WpfMedia.Point3D(x, y, z));
                 }
             }
-            BuildGridIndices(wMesh, uRes, vRes);
+            BuildGridIndices(wMesh, uRes, vRes, true);
             SetupNewSurface(wMesh);
         }
 
@@ -375,9 +376,23 @@ namespace Vektoranaliz
                 }
             }
 
-            BuildGridIndices(wMesh, resolution, resolution);
+            BuildGridIndices(wMesh, resolution, resolution, false);
             SetupNewSurface(wMesh);
             DrawContour(maxRadius, planeZ, resolution);
+
+            // Отрисовка полупрозрачной плоскости сечения
+            var planeMesh = new WpfMedia.MeshGeometry3D();
+            planeMesh.Positions.Add(new WpfMedia.Point3D(-maxRadius, -maxRadius, planeZ));
+            planeMesh.Positions.Add(new WpfMedia.Point3D(maxRadius, -maxRadius, planeZ));
+            planeMesh.Positions.Add(new WpfMedia.Point3D(maxRadius, maxRadius, planeZ));
+            planeMesh.Positions.Add(new WpfMedia.Point3D(-maxRadius, maxRadius, planeZ));
+
+            planeMesh.TriangleIndices.Add(0); planeMesh.TriangleIndices.Add(1); planeMesh.TriangleIndices.Add(2);
+            planeMesh.TriangleIndices.Add(0); planeMesh.TriangleIndices.Add(2); planeMesh.TriangleIndices.Add(3);
+
+            var planeMat = MaterialHelper.CreateMaterial(Colors.Green, 0.4);
+            var planeModel = new WpfMedia.GeometryModel3D(planeMesh, planeMat) { BackMaterial = planeMat };
+            ModelContainer.Children.Add(new WpfMedia.ModelVisual3D { Content = planeModel });
         }
 
         private void DrawContour(double radius, double zHeight, int resolution)
@@ -394,7 +409,6 @@ namespace Vektoranaliz
             }
 
             mb.AddTube(path, 0.05f, 12, false);
-
             var material = MaterialHelper.CreateMaterial(Colors.Yellow, 1.0);
             var model = new WpfMedia.GeometryModel3D(ConvertMesh(mb.ToMesh()), material);
 
@@ -418,10 +432,9 @@ namespace Vektoranaliz
             Viewport.ZoomExtents();
         }
 
-        // --- ВЕКТОР ПРИ НАВЕДЕНИИ МЫШИ ---
         private void Viewport_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            if (currentMesh.Positions.Count == 0) return;
+            if (currentMesh.Positions.Count == 0 || !isFieldValid) return;
 
             Point mousePos = e.GetPosition(Viewport);
             bool isHit = Viewport3DHelper.FindNearest(Viewport.Viewport, mousePos, out WpfMedia.Point3D hitPoint, out WpfMedia.Vector3D normal, out DependencyObject visual);
@@ -450,9 +463,10 @@ namespace Vektoranaliz
             ModelContainer.Children.Add(currentVectorMarker);
         }
 
-        // --- РАСЧЕТ ПОТОКА ---
         private void CalculateFlux(WpfMedia.MeshGeometry3D mesh)
         {
+            if (!UpdateVectorFieldExpressions()) return;
+
             double totalFlux = 0;
             for (int i = 0; i < mesh.TriangleIndices.Count; i += 3)
             {
