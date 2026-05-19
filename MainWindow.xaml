@@ -2,27 +2,47 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:hx="http://helix-toolkit.org/wpf"
-        Title="Векторный анализ" Height="600" Width="1000">
+        Title="Векторный анализ" Height="650" Width="1000">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="260"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Padding должен быть ТОЛЬКО здесь, в Border -->
         <Border Grid.Column="0" Background="#f0f0f0" Padding="15">
             <StackPanel>
                 <TextBlock Text="Векторный анализ" FontWeight="Bold" Margin="0,0,0,10" FontSize="16"/>
-                <TextBlock Text="1. Выберите поверхность:" Margin="0,5"/>
+
+                <TextBlock Text="1. Поле вектора A:" FontWeight="Bold" Margin="0,5"/>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Text="Ax = " VerticalAlignment="Center" Width="30"/>
+                    <TextBox x:Name="TextBoxAx" Text="x" Width="190"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Text="Ay = " VerticalAlignment="Center" Width="30"/>
+                    <TextBox x:Name="TextBoxAy" Text="y" Width="190"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Text="Az = " VerticalAlignment="Center" Width="30"/>
+                    <TextBox x:Name="TextBoxAz" Text="z" Width="190"/>
+                </StackPanel>
+
+                <Separator Margin="0,15"/>
+
+                <TextBlock Text="2. Поверхности:" FontWeight="Bold" Margin="0,5"/>
                 <Button Content="Сфера" Click="AddSphere_Click" Margin="0,2" Height="30"/>
                 <Button Content="Цилиндр" Click="AddCylinder_Click" Margin="0,2" Height="30"/>
+                <Button Content="Параболоид (ограниченный)" Click="AddParaboloid_Click" Margin="0,2" Height="30"/>
+
                 <Separator Margin="0,15"/>
-                <TextBlock Text="3. Результат (Поток):" FontWeight="Bold"/>
+
+                <TextBlock Text="3. Результат:" FontWeight="Bold"/>
                 <TextBlock x:Name="FluxResult" Text="Ф = 0.00" FontSize="18" Foreground="DarkBlue" Margin="0,5"/>
+                <TextBlock Text="* Наведите мышь на поверхность для оценки плотности потока в точке" TextWrapping="Wrap" FontSize="11" Foreground="Gray" Margin="0,10,0,0"/>
             </StackPanel>
         </Border>
 
-        <hx:HelixViewport3D Grid.Column="1" x:Name="Viewport" ZoomExtentsWhenLoaded="True" MouseDown="Viewport_MouseDown">
+        <hx:HelixViewport3D Grid.Column="1" x:Name="Viewport" ZoomExtentsWhenLoaded="True" MouseMove="Viewport_MouseMove">
             <hx:DefaultLights/>
             <ModelVisual3D x:Name="ModelContainer"/>
         </hx:HelixViewport3D>
