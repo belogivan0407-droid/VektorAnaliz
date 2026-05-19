@@ -42,8 +42,14 @@
             </StackPanel>
         </Border>
 
-        <hx:HelixViewport3D Grid.Column="1" x:Name="Viewport" ZoomExtentsWhenLoaded="True" MouseMove="Viewport_MouseMove">
+        <hx:HelixViewport3D Grid.Column="1" x:Name="Viewport" ZoomExtentsWhenLoaded="True" MouseMove="Viewport_MouseMove"
+                            ShowCoordinateSystem="True" ShowViewCube="True">
             <hx:DefaultLights/>
+
+            <hx:ArrowVisual3D Point1="0,0,0" Point2="4,0,0" Diameter="0.08" Fill="Red"/>
+            <hx:ArrowVisual3D Point1="0,0,0" Point2="0,4,0" Diameter="0.08" Fill="Green"/>
+            <hx:ArrowVisual3D Point1="0,0,0" Point2="0,0,4" Diameter="0.08" Fill="Blue"/>
+
             <ModelVisual3D x:Name="ModelContainer"/>
         </hx:HelixViewport3D>
     </Grid>
