@@ -9,38 +9,50 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="#f0f0f0" Padding="15">
-            <StackPanel>
-                <TextBlock Text="Векторный анализ" FontWeight="Bold" Margin="0,0,0,10" FontSize="16"/>
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <Border Background="#f0f0f0" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="Векторный анализ" FontWeight="Bold" Margin="0,0,0,10" FontSize="16"/>
 
-                <TextBlock Text="1. Поле вектора A:" FontWeight="Bold" Margin="0,5"/>
-                <StackPanel Orientation="Horizontal" Margin="0,2">
-                    <TextBlock Text="Ax = " VerticalAlignment="Center" Width="30"/>
-                    <TextBox x:Name="TextBoxAx" Text="x" Width="190"/>
+                    <TextBlock Text="1. Поле вектора A:" FontWeight="Bold" Margin="0,5"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <TextBlock Text="Ax = " VerticalAlignment="Center" Width="30"/>
+                        <TextBox x:Name="TextBoxAx" Text="x" Width="190"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <TextBlock Text="Ay = " VerticalAlignment="Center" Width="30"/>
+                        <TextBox x:Name="TextBoxAy" Text="y" Width="190"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <TextBlock Text="Az = " VerticalAlignment="Center" Width="30"/>
+                        <TextBox x:Name="TextBoxAz" Text="z" Width="190"/>
+                    </StackPanel>
+
+                    <Separator Margin="0,15"/>
+
+                    <TextBlock Text="2. Поверхности (9 квадрик):" FontWeight="Bold" Margin="0,5"/>
+                    <Button Content="1. Эллипсоид / Сфера" Click="AddEllipsoid_Click" Margin="0,2" Height="25"/>
+                    <Button Content="2. Однополостный гиперболоид" Click="AddOneSheetHyperboloid_Click" Margin="0,2" Height="25"/>
+                    <Button Content="3. Двуполостный гиперболоид" Click="AddTwoSheetHyperboloid_Click" Margin="0,2" Height="25"/>
+                    <Button Content="4. Эллиптический конус" Click="AddEllipticCone_Click" Margin="0,2" Height="25"/>
+                    <Button Content="5. Эллиптический параболоид" Click="AddParaboloid_Click" Margin="0,2" Height="25"/>
+                    <Button Content="6. Гиперболический параболоид" Click="AddHyperbolicParaboloid_Click" Margin="0,2" Height="25"/>
+                    <Button Content="7. Эллиптический цилиндр" Click="AddEllipticCylinder_Click" Margin="0,2" Height="25"/>
+                    <Button Content="8. Гиперболический цилиндр" Click="AddHyperbolicCylinder_Click" Margin="0,2" Height="25"/>
+                    <Button Content="9. Параболический цилиндр" Click="AddParabolicCylinder_Click" Margin="0,2" Height="25"/>
+
+                    <Separator Margin="0,10"/>
+                    <TextBlock Text="Особые режимы:" FontWeight="Bold" Margin="0,3"/>
+                    <Button Content="Пересечение и контур" Click="AddIntersection_Click" Margin="0,2" Height="28" Background="#FFE4B5"/>
+
+                    <Separator Margin="0,15"/>
+
+                    <TextBlock Text="3. Результат:" FontWeight="Bold"/>
+                    <TextBlock x:Name="FluxResult" Text="Ф = 0.00" FontSize="18" Foreground="DarkBlue" Margin="0,5"/>
+                    <TextBlock Text="* Наведите мышь на поверхность для оценки плотности потока в точке" TextWrapping="Wrap" FontSize="11" Foreground="Gray" Margin="0,10,0,0"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,2">
-                    <TextBlock Text="Ay = " VerticalAlignment="Center" Width="30"/>
-                    <TextBox x:Name="TextBoxAy" Text="y" Width="190"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,2">
-                    <TextBlock Text="Az = " VerticalAlignment="Center" Width="30"/>
-                    <TextBox x:Name="TextBoxAz" Text="z" Width="190"/>
-                </StackPanel>
-
-                <Separator Margin="0,15"/>
-
-                <TextBlock Text="2. Поверхности:" FontWeight="Bold" Margin="0,5"/>
-                <Button Content="Сфера" Click="AddSphere_Click" Margin="0,2" Height="30"/>
-                <Button Content="Цилиндр" Click="AddCylinder_Click" Margin="0,2" Height="30"/>
-                <Button Content="Параболоид (ограниченный)" Click="AddParaboloid_Click" Margin="0,2" Height="30"/>
-
-                <Separator Margin="0,15"/>
-
-                <TextBlock Text="3. Результат:" FontWeight="Bold"/>
-                <TextBlock x:Name="FluxResult" Text="Ф = 0.00" FontSize="18" Foreground="DarkBlue" Margin="0,5"/>
-                <TextBlock Text="* Наведите мышь на поверхность для оценки плотности потока в точке" TextWrapping="Wrap" FontSize="11" Foreground="Gray" Margin="0,10,0,0"/>
-            </StackPanel>
-        </Border>
+            </Border>
+        </ScrollViewer>
 
         <hx:HelixViewport3D Grid.Column="1" x:Name="Viewport" ZoomExtentsWhenLoaded="True" MouseMove="Viewport_MouseMove"
                             ShowCoordinateSystem="True" ShowViewCube="True">

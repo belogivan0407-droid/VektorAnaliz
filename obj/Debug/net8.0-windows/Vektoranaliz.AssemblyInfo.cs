@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Vektoranaliz")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+61a2ad93042f813ffd8a8f66714b3e3cb4af3ed0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4b86a20235d6a181819564bb949c00be687c4fdc")]
 [assembly: System.Reflection.AssemblyProductAttribute("Vektoranaliz")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Vektoranaliz")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
