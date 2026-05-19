@@ -1,0 +1,30 @@
+﻿<Window x:Class="Vektoranaliz.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:hx="http://helix-toolkit.org/wpf"
+        Title="Векторный анализ" Height="600" Width="1000">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Padding должен быть ТОЛЬКО здесь, в Border -->
+        <Border Grid.Column="0" Background="#f0f0f0" Padding="15">
+            <StackPanel>
+                <TextBlock Text="Векторный анализ" FontWeight="Bold" Margin="0,0,0,10" FontSize="16"/>
+                <TextBlock Text="1. Выберите поверхность:" Margin="0,5"/>
+                <Button Content="Сфера" Click="AddSphere_Click" Margin="0,2" Height="30"/>
+                <Button Content="Цилиндр" Click="AddCylinder_Click" Margin="0,2" Height="30"/>
+                <Separator Margin="0,15"/>
+                <TextBlock Text="3. Результат (Поток):" FontWeight="Bold"/>
+                <TextBlock x:Name="FluxResult" Text="Ф = 0.00" FontSize="18" Foreground="DarkBlue" Margin="0,5"/>
+            </StackPanel>
+        </Border>
+
+        <hx:HelixViewport3D Grid.Column="1" x:Name="Viewport" ZoomExtentsWhenLoaded="True" MouseDown="Viewport_MouseDown">
+            <hx:DefaultLights/>
+            <ModelVisual3D x:Name="ModelContainer"/>
+        </hx:HelixViewport3D>
+    </Grid>
+</Window>
