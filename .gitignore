@@ -1,0 +1,11 @@
+# Временные файлы Visual Studio
+.vs/
+bin/
+obj/
+
+# Пользовательские настройки и кэши
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.db

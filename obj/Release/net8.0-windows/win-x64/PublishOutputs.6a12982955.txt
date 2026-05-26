@@ -1,7 +1,0 @@
-C:\Users\user\Desktop\Новая папка (2)\Vektoranaliz.pdb
-C:\Users\user\Desktop\Новая папка (2)\D3DCompiler_47_cor3.dll
-C:\Users\user\Desktop\Новая папка (2)\PenImc_cor3.dll
-C:\Users\user\Desktop\Новая папка (2)\PresentationNative_cor3.dll
-C:\Users\user\Desktop\Новая папка (2)\vcruntime140_cor3.dll
-C:\Users\user\Desktop\Новая папка (2)\wpfgfx_cor3.dll
-C:\Users\user\Desktop\Новая папка (2)\Vektoranaliz.exe

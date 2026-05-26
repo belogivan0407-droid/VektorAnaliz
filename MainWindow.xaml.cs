@@ -67,20 +67,26 @@ namespace Vektoranaliz
         private void ShowHelp_Click(object sender, RoutedEventArgs e)
         {
             string helpText =
-                "📚 Продвинутые функции анализатора:\n\n" +
-                "1️⃣ ТЕПЛОВАЯ КАРТА (Heatmap):\n" +
-                "Поверхность динамически окрашивается:\n" +
-                "Красный — вектор смотрит наружу (поток вытекает).\n" +
-                "Синий — вектор смотрит внутрь (поток втекает).\n" +
-                "Белый — поле скользит вдоль поверхности (поток равен нулю).\n\n" +
-                "2️⃣ АНАЛИЗАТОР ТОЧКИ:\n" +
-                "Наведите мышь на любую часть фигуры. Справа внизу появится всплывающая панель с точными расчетами локальной нормали, локального поля и скалярного произведения (плотности) именно в этой точке.\n\n" +
-                "3️⃣ ПЛОЩАДЬ ПОВЕРХНОСТИ:\n" +
-                "Помимо потока, программа точно высчитывает реальную площадь S обрезанного фрагмента поверхности.\n\n" +
-                "4️⃣ УМНЫЙ ПАРСЕР:\n" +
-                "Теперь не обязательно ставить умножение. Программа сама поймет выражения вроде 2x, xy или 5sin(x).\n\n" +
-                "5️⃣ ОРИЕНТАЦИЯ НОРМАЛИ:\n" +
-                "Вы можете принудительно вывернуть нормаль наизнанку выпадающим списком. При этом знак потока изменится на противоположный.";
+                "РУКОВОДСТВО ПОЛЬЗОВАТЕЛЯ: ВЕКТОРНЫЙ АНАЛИЗ\n\n" +
+        "1. ЗАДАНИЕ ВЕКТОРНОГО ПОЛЯ A(x,y,z):\n" +
+        "Введите выражения для компонент поля Ax, Ay, Az. Допускается использование переменных x, y, z и функций (sin, cos, exp, sqrt, abs, pi).\n" +
+        "Пример: 2x, xy, sin(x^2).\n\n" +
+        "2. ПОСТРОЕНИЕ ПОВЕРХНОСТИ:\n" +
+        "- 'Свои поверхности': введите уравнение z=f(x,y). Можно строить сразу две поверхности (z1 - синяя, z2 - зеленая) для демонстрации их пересечения.\n" +
+        "- 'Шаблоны': выберите готовое тело (сфера, конус и т.д.). Укажите параметры a, b, c для задания размеров.\n\n" +
+        "3. ОГРАНИЧЕНИЯ (ОТРАСЕЛЬ):\n" +
+        "В поле 'Ограничение' введите неравенство, которое отсекает область (например: x^2 + y^2 <= 4).\n" +
+        "Программа вырежет из поверхности только тот кусок, где условие выполняется (True).\n\n" +
+        "4. РАСЧЕТЫ И АНАЛИЗ:\n" +
+        "- 'Пересчитать поток': запускает алгоритм численного интегрирования. Вычисляется поток Ф через всю видимую поверхность.\n" +
+        "- Площадь (S): суммарная площадь всех полигонов, попавших в область.\n" +
+        "- Анализ точки: Наведите курсор на 3D-модель. Панель 'Данные в точке курсора' покажет вектор нормали n, вектор поля A и плотность потока (A·n) в конкретной точке.\n\n" +
+        "5. ИНТЕРПРЕТАЦИЯ ЦВЕТА:\n" +
+        "Поверхность окрашивается градиентом:\n" +
+        "- КРАСНЫЙ: поток вытекает (A·n > 0).\n" +
+        "- СИНИЙ: поток втекает (A·n < 0).\n" +
+        "- БЕЛЫЙ: поток равен 0 (вектор поля касается поверхности).\n\n" +
+        "Ориентация нормали в меню определяет, какая сторона поверхности считается 'внешней'.";
 
             MessageBox.Show(helpText, "Инструкция к программе", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -423,7 +429,11 @@ namespace Vektoranaliz
                 double area = cross.Length * 0.5;
                 totalArea += area;
 
-                var n = cross; n.Normalize(); n *= sign;
+                // --- ЗАЩИТА ОТ ПОЛЮСОВ ---
+                var n = cross;
+                if (n.Length < 1e-6) n = new WpfMedia.Vector3D(0, 0, 1); // Безопасная нормаль
+                else n.Normalize();
+                n *= sign;
 
                 vertexNormals[i1] += n; vertexFaceCounts[i1]++;
                 vertexNormals[i2] += n; vertexFaceCounts[i2]++;
@@ -431,7 +441,10 @@ namespace Vektoranaliz
 
                 double cx = (p1.X + p2.X + p3.X) / 3.0, cy = (p1.Y + p2.Y + p3.Y) / 3.0, cz = (p1.Z + p2.Z + p3.Z) / 3.0;
                 var fieldA = EvaluateVectorField(cx, cy, cz);
-                totalFlux += (fieldA.X * n.X + fieldA.Y * n.Y + fieldA.Z * n.Z) * area;
+
+                // Добавляем только если результат расчета поля не NaN
+                double partialFlux = (fieldA.X * n.X + fieldA.Y * n.Y + fieldA.Z * n.Z) * area;
+                if (!double.IsNaN(partialFlux)) totalFlux += partialFlux;
             }
 
             FluxResult.Text = $"Поток Ф = {totalFlux:F4}";
@@ -445,15 +458,17 @@ namespace Vektoranaliz
             {
                 var n = vertexNormals[i];
                 if (vertexFaceCounts[i] > 0) n /= vertexFaceCounts[i];
+
+                if (n.Length < 1e-6) n = new WpfMedia.Vector3D(0, 0, 1);
                 n.Normalize();
                 cutMesh.Normals.Add(n);
 
                 var p = cutMesh.Positions[i];
                 var fieldA = EvaluateVectorField(p.X, p.Y, p.Z);
                 double d = fieldA.X * n.X + fieldA.Y * n.Y + fieldA.Z * n.Z;
-                densities[i] = d;
+                densities[i] = double.IsNaN(d) ? 0 : d;
 
-                if (Math.Abs(d) > maxAbsDensity) maxAbsDensity = Math.Abs(d);
+                if (Math.Abs(densities[i]) > maxAbsDensity) maxAbsDensity = Math.Abs(densities[i]);
             }
 
             cutMesh.TextureCoordinates.Clear();
@@ -469,7 +484,6 @@ namespace Vektoranaliz
             heatMapBrush.GradientStops.Add(new GradientStop(Color.FromRgb(95, 184, 255), 1.0));
 
             var material = new WpfMedia.DiffuseMaterial(heatMapBrush);
-
             var model = new WpfMedia.GeometryModel3D(cutMesh, material) { BackMaterial = material };
             currentSurfaceModel = new WpfMedia.ModelVisual3D { Content = model };
             ModelContainer.Children.Add(currentSurfaceModel);
