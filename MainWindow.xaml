@@ -2,69 +2,135 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:hx="http://helix-toolkit.org/wpf"
-        Title="Векторный анализ" Height="650" Width="1000">
+        Title="Векторный анализ" Height="950" Width="1200">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="380"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-            <Border Background="#f0f0f0" Padding="15">
+            <Border Background="#f0f4f8" Padding="15">
                 <StackPanel>
-                    <TextBlock Text="Векторный анализ" FontWeight="Bold" Margin="0,0,0,10" FontSize="16"/>
+                    <Button Content="❔ ИНСТРУКЦИЯ И СПРАВКА" Click="ShowHelp_Click" Margin="0,0,0,15" Height="32" Background="#FFE4E1" BorderBrush="#DB7093" FontWeight="Bold"/>
 
-                    <TextBlock Text="1. Поле вектора A:" FontWeight="Bold" Margin="0,5"/>
+                    <TextBlock Text="1. Поле вектора A(x,y,z):" FontWeight="Bold" Margin="0,5"/>
                     <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock Text="Ax = " VerticalAlignment="Center" Width="30"/>
-                        <TextBox x:Name="TextBoxAx" Text="x" Width="190"/>
+                        <TextBlock Text="Ax = " VerticalAlignment="Center" Width="25"/>
+                        <TextBox x:Name="TextBoxAx" Text="x" Width="305"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock Text="Ay = " VerticalAlignment="Center" Width="30"/>
-                        <TextBox x:Name="TextBoxAy" Text="y" Width="190"/>
+                        <TextBlock Text="Ay = " VerticalAlignment="Center" Width="25"/>
+                        <TextBox x:Name="TextBoxAy" Text="y" Width="305"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock Text="Az = " VerticalAlignment="Center" Width="30"/>
-                        <TextBox x:Name="TextBoxAz" Text="z" Width="190"/>
+                        <TextBlock Text="Az = " VerticalAlignment="Center" Width="25"/>
+                        <TextBox x:Name="TextBoxAz" Text="z" Width="305"/>
                     </StackPanel>
 
-                    <TextBlock x:Name="ErrorText" Foreground="Red" FontWeight="Bold" Margin="0,5" TextWrapping="Wrap"/>
+                    <Border Background="#FFFFE0" BorderBrush="#EEE8AA" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,5,0,10">
+                        <StackPanel>
+                            <TextBlock Text="💡 Справка по вводу формул:" FontWeight="Bold" FontSize="12" Margin="0,0,0,4"/>
+                            <TextBlock Text="• Можно писать слитно: 2x, 3y, xy " FontSize="11" Margin="0,2" Foreground="DarkGreen" FontWeight="Bold"/>
+                            <TextBlock Text="• Степень: x^2, (x+y)^3. Корень: sqrt(x)" FontSize="11" Margin="0,2"/>
+                            <TextBlock Text="• Логика ограничений: И, ИЛИ (пример: z >= 0 И x > 0)" FontSize="11" Margin="0,2"/>
+                        </StackPanel>
+                    </Border>
 
-                    <Separator Margin="0,15"/>
+                    <TextBlock Text="Ориентация нормали:" FontWeight="Bold" Margin="0,5,0,2"/>
+                    <ComboBox x:Name="CbNormalDir" SelectedIndex="0" Height="25" Margin="0,0,0,10">
+                        <ComboBoxItem Content="Внешняя (+)" />
+                        <ComboBoxItem Content="Внутренняя (-)" />
+                    </ComboBox>
 
-                    <TextBlock Text="2. Поверхности (9 квадрик):" FontWeight="Bold" Margin="0,5"/>
-                    <Button Content="1. Эллипсоид / Сфера" Click="AddEllipsoid_Click" Margin="0,2" Height="25"/>
-                    <Button Content="2. Однополостный гиперболоид" Click="AddOneSheetHyperboloid_Click" Margin="0,2" Height="25"/>
-                    <Button Content="3. Двуполостный гиперболоид" Click="AddTwoSheetHyperboloid_Click" Margin="0,2" Height="25"/>
-                    <Button Content="4. Эллиптический конус" Click="AddEllipticCone_Click" Margin="0,2" Height="25"/>
-                    <Button Content="5. Эллиптический параболоид" Click="AddParaboloid_Click" Margin="0,2" Height="25"/>
-                    <Button Content="6. Гиперболический параболоид" Click="AddHyperbolicParaboloid_Click" Margin="0,2" Height="25"/>
-                    <Button Content="7. Эллиптический цилиндр" Click="AddEllipticCylinder_Click" Margin="0,2" Height="25"/>
-                    <Button Content="8. Гиперболический цилиндр" Click="AddHyperbolicCylinder_Click" Margin="0,2" Height="25"/>
-                    <Button Content="9. Параболический цилиндр" Click="AddParabolicCylinder_Click" Margin="0,2" Height="25"/>
+                    <Button Content="ПЕРЕСЧИТАТЬ ПОТОК И ГЕОМЕТРИЮ" Click="Recalculate_Click" Margin="0,5" Height="40" Background="#90EE90" FontWeight="Bold" FontSize="14"/>
 
                     <Separator Margin="0,10"/>
-                    <TextBlock Text="Особые режимы:" FontWeight="Bold" Margin="0,3"/>
-                    <Button Content="Пересечение и контур" Click="AddIntersection_Click" Margin="0,2" Height="28" Background="#FFE4B5"/>
+
+                    <TextBlock Text="Ограничение (Условие отсечения):" FontWeight="Bold" Margin="0,10,0,2"/>
+                    <TextBox x:Name="TbCondition" Height="40" TextWrapping="Wrap" ToolTip="Например: x^2 + y^2 &lt;= 4 И z &gt;= 0"/>
+                    <CheckBox x:Name="CbDrawAsSecond" IsChecked="True" Content="Показывать границу ограничения (оранжевая)" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed" FontWeight="Bold" Foreground="DarkOrange" Margin="0,3,0,10"/>
+
+                    <Separator Margin="0,10"/>
+
+                    <TextBlock Text="2. Свои поверхности z = f(x,y):" FontWeight="Bold" Margin="0,5"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <TextBlock Text="z1 =" VerticalAlignment="Center" Width="30" FontWeight="Bold" Foreground="DodgerBlue"/>
+                        <TextBox x:Name="TextBoxCustomSurface1" Text="sqrt(9 - x^2 - y^2)" Width="305" Height="25"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <TextBlock Text="z2 =" VerticalAlignment="Center" Width="30" FontWeight="Bold" Foreground="LimeGreen"/>
+                        <TextBox x:Name="TextBoxCustomSurface2" Text="2.5 - x" Width="305" Height="25"/>
+                    </StackPanel>
+                    <CheckBox x:Name="CbEnableSecondSurface" Content="Построить поверхность z2 (зеленая)" IsChecked="False" FontWeight="Bold" Foreground="LimeGreen" Margin="0,0,0,5"/>
+                    <Button Content="Построить свои поверхности" Click="AddCustomSurface_Click" Margin="0,2" Height="30" Background="#BDD7EE" FontWeight="Bold"/>
+
+                    <Separator Margin="0,10"/>
+
+                    <TextBlock Text="Настройки шаблонов (a, b, c):" FontWeight="Bold" Margin="0,5"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <TextBox x:Name="TbA" Width="50" Margin="0,0,15,0"/>
+                        <TextBox x:Name="TbB" Width="50" Margin="0,0,15,0"/>
+                        <TextBox x:Name="TbC" Width="50"/>
+                    </StackPanel>
+
+                    <TextBlock Text="3. Шаблоны базовых поверхностей:" FontWeight="Bold" Margin="0,10,0,5"/>
+                    <WrapPanel Margin="0,2">
+                        <Button Content="Сфера" Click="AddEllipsoid_Click" Margin="0,2,5,2" Width="100"/>
+                        <Button Content="Однопол. гиперболоид" Click="AddOneSheetHyperboloid_Click" Margin="0,2,5,2" Width="140"/>
+                        <Button Content="Двупол. гиперболоид" Click="AddTwoSheetHyperboloid_Click" Margin="0,2,5,2" Width="140"/>
+                        <Button Content="Конус" Click="AddEllipticCone_Click" Margin="0,2,5,2" Width="100"/>
+                        <Button Content="Элл. параболоид" Click="AddParaboloid_Click" Margin="0,2,5,2" Width="120"/>
+                        <Button Content="Гиперб. параболоид" Click="AddHyperbolicParaboloid_Click" Margin="0,2,5,2" Width="130"/>
+                        <Button Content="Цилиндр" Click="AddEllipticCylinder_Click" Margin="0,2,5,2" Width="100"/>
+                    </WrapPanel>
 
                     <Separator Margin="0,15"/>
 
-                    <TextBlock Text="3. Результат:" FontWeight="Bold"/>
-                    <TextBlock x:Name="FluxResult" Text="Ф = 0.00" FontSize="18" Foreground="DarkBlue" Margin="0,5"/>
-                    <TextBlock Text="* Наведите мышь на поверхность для оценки плотности потока в точке" TextWrapping="Wrap" FontSize="11" Foreground="Gray" Margin="0,10,0,0"/>
+                    <TextBlock Text="4. Результаты расчета:" FontWeight="Bold" FontSize="16" Foreground="#2c3e50"/>
+                    <TextBlock x:Name="FluxResult" Text="Поток Ф = 0.00" FontSize="20" FontWeight="Bold" Foreground="#e74c3c" Margin="0,5"/>
+                    <TextBlock x:Name="AreaResult" Text="Площадь S = 0.00" FontSize="16" FontWeight="Bold" Foreground="#34495e" Margin="0,0,0,10"/>
+
+                    <Border Background="#2c3e50" CornerRadius="5" Padding="10">
+                        <StackPanel>
+                            <TextBlock Text="Данные в точке курсора:" FontWeight="Bold" Foreground="White" Margin="0,0,0,5"/>
+                            <TextBlock x:Name="HoverPoint" Text="Точка: —" Foreground="#bdc3c7" FontFamily="Consolas"/>
+                            <TextBlock x:Name="HoverNormal" Text="Нормаль n: —" Foreground="#bdc3c7" FontFamily="Consolas"/>
+                            <TextBlock x:Name="HoverField" Text="Поле A: —" Foreground="#bdc3c7" FontFamily="Consolas"/>
+                            <TextBlock x:Name="HoverDensity" Text="Плотность (A·n): —" Foreground="#f1c40f" FontWeight="Bold" FontFamily="Consolas" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock x:Name="ErrorText" Foreground="Red" FontWeight="Bold" Margin="0,5" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
         </ScrollViewer>
 
-        <hx:HelixViewport3D Grid.Column="1" x:Name="Viewport" ZoomExtentsWhenLoaded="True" MouseMove="Viewport_MouseMove"
-                            ShowCoordinateSystem="True" ShowViewCube="True">
-            <hx:DefaultLights/>
+        <Grid Grid.Column="1">
+            <hx:HelixViewport3D x:Name="Viewport" ZoomExtentsWhenLoaded="True" MouseMove="Viewport_MouseMove"
+                                ShowCoordinateSystem="True" ShowViewCube="True" Background="#090d0c">
+                <hx:DefaultLights/>
+                <hx:ArrowVisual3D Point1="0,0,0" Point2="4,0,0" Diameter="0.08" Fill="#ff7b54"/>
+                <hx:ArrowVisual3D Point1="0,0,0" Point2="0,4,0" Diameter="0.08" Fill="#39b7a5"/>
+                <hx:ArrowVisual3D Point1="0,0,0" Point2="0,0,4" Diameter="0.08" Fill="#5fb8ff"/>
+                <ModelVisual3D x:Name="ModelContainer"/>
+            </hx:HelixViewport3D>
 
-            <hx:ArrowVisual3D Point1="0,0,0" Point2="4,0,0" Diameter="0.08" Fill="Red"/>
-            <hx:ArrowVisual3D Point1="0,0,0" Point2="0,4,0" Diameter="0.08" Fill="Green"/>
-            <hx:ArrowVisual3D Point1="0,0,0" Point2="0,0,4" Diameter="0.08" Fill="Blue"/>
-
-            <ModelVisual3D x:Name="ModelContainer"/>
-        </hx:HelixViewport3D>
+            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="20" Background="#aa000000" CornerRadius="5" Padding="10">
+                <StackPanel>
+                    <TextBlock Text="Плотность потока" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <Rectangle Width="20" Height="100" Margin="0,5">
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#ff7b54" Offset="0.0"/>
+                                <GradientStop Color="#eef3de" Offset="0.5"/>
+                                <GradientStop Color="#5fb8ff" Offset="1.0"/>
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <TextBlock Text="+ (Вытекает)" Foreground="#ff7b54" FontSize="10" HorizontalAlignment="Center" Margin="0,2"/>
+                    <TextBlock Text="- (Втекает)" Foreground="#5fb8ff" FontSize="10" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
