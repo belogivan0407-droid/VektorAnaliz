@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using System.Numerics;
@@ -24,7 +25,8 @@ namespace Vektoranaliz
         public MainWindow()
         {
             InitializeComponent();
-            Loaded += (s, e) => AddCustomSurface_Click(null, null);
+            // Запуск без отрисовки, так как поля теперь пустые
+            Loaded += (s, e) => { /* Можно оставить пустым или вывести подсказку */ };
         }
 
         private Vector3 V3(double x, double y, double z) => new Vector3((float)x, (float)y, (float)z);
@@ -72,7 +74,7 @@ namespace Vektoranaliz
         "Введите выражения для компонент поля Ax, Ay, Az. Допускается использование переменных x, y, z и функций (sin, cos, exp, sqrt, abs, pi).\n" +
         "Пример: 2x, xy, sin(x^2).\n\n" +
         "2. ПОСТРОЕНИЕ ПОВЕРХНОСТИ:\n" +
-        "- 'Свои поверхности': введите уравнение z=f(x,y). Можно строить сразу две поверхности (z1 - синяя, z2 - зеленая) для демонстрации их пересечения.\n" +
+        "- 'Свои поверхности': введите уравнения. Можно включить до 5 поверхностей одновременно. Галочка 'Объединить' позволяет сшить их в единое тело для расчета общего потока.\n" +
         "- 'Шаблоны': выберите готовое тело (сфера, конус и т.д.). Укажите параметры a, b, c для задания размеров.\n\n" +
         "3. ОГРАНИЧЕНИЯ (ОТРАСЕЛЬ):\n" +
         "В поле 'Ограничение' введите неравенство, которое отсекает область (например: x^2 + y^2 <= 4).\n" +
@@ -399,16 +401,30 @@ namespace Vektoranaliz
             idx += 4;
         }
 
+        // Вспомогательный метод для склеивания массива сеток в единую математическую модель
+        private WpfMedia.MeshGeometry3D CombineMultipleMeshes(List<WpfMedia.MeshGeometry3D> meshes)
+        {
+            var combined = new WpfMedia.MeshGeometry3D();
+            int indexOffset = 0;
+
+            foreach (var mesh in meshes)
+            {
+                if (mesh == null || mesh.Positions.Count == 0) continue;
+
+                foreach (var p in mesh.Positions) combined.Positions.Add(p);
+                foreach (int index in mesh.TriangleIndices) combined.TriangleIndices.Add(index + indexOffset);
+
+                indexOffset += mesh.Positions.Count;
+            }
+            return combined;
+        }
+
         private void ProcessAndRenderSurface(WpfMedia.MeshGeometry3D rawMesh)
         {
             var cutMesh = ApplyCondition(rawMesh);
             currentMesh = cutMesh;
 
-            if (cutMesh.Positions.Count == 0 || !UpdateVectorFieldExpressions())
-            {
-                ModelContainer.Children.Clear();
-                return;
-            }
+            if (cutMesh.Positions.Count == 0 || !UpdateVectorFieldExpressions()) return; // Убрана очистка контейнера здесь, чтобы не ломать цикл
 
             int sign = CbNormalDir != null && CbNormalDir.SelectedIndex == 0 ? 1 : -1;
             double totalFlux = 0;
@@ -489,23 +505,12 @@ namespace Vektoranaliz
             ModelContainer.Children.Add(currentSurfaceModel);
         }
 
-        private void SetupNewSurface(WpfMedia.MeshGeometry3D baseMesh, WpfMedia.MeshGeometry3D secondCustomMesh = null)
+        private void SetupNewSurface(WpfMedia.MeshGeometry3D baseMesh)
         {
             ModelContainer.Children.Clear();
             currentVectorMarker = null;
 
             ProcessAndRenderSurface(baseMesh);
-
-            if (secondCustomMesh != null && secondCustomMesh.Positions.Count > 0)
-            {
-                var cutSecondMesh = ApplyCondition(secondCustomMesh);
-                if (cutSecondMesh.Positions.Count > 0)
-                {
-                    var secondMaterial = MaterialHelper.CreateMaterial(Colors.LimeGreen, 0.35);
-                    var secondModel = new WpfMedia.GeometryModel3D(cutSecondMesh, secondMaterial) { BackMaterial = secondMaterial };
-                    ModelContainer.Children.Add(new WpfMedia.ModelVisual3D { Content = secondModel });
-                }
-            }
 
             if (CbDrawAsSecond != null && CbDrawAsSecond.IsChecked == true)
             {
@@ -554,13 +559,63 @@ namespace Vektoranaliz
             ModelContainer.Children.Add(currentVectorMarker);
         }
 
+        // Обновленная логика построения своих поверхностей (Поддержка до 5 штук и объединения)
         private void AddCustomSurface_Click(object sender, RoutedEventArgs e)
         {
-            currentSurfaceGenerator = () => {
-                var wMesh1 = GenerateCustomMesh(TextBoxCustomSurface1.Text);
-                WpfMedia.MeshGeometry3D wMesh2 = null;
-                if (CbEnableSecondSurface.IsChecked == true) wMesh2 = GenerateCustomMesh(TextBoxCustomSurface2.Text);
-                if (wMesh1 != null) SetupNewSurface(wMesh1, wMesh2);
+            currentSurfaceGenerator = () =>
+            {
+                var activeMeshes = new List<WpfMedia.MeshGeometry3D>();
+
+                if (CheckBoxZ1.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ1.Text))
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ1.Text));
+
+                if (CheckBoxZ2.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ2.Text))
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ2.Text));
+
+                if (CheckBoxZ3.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ3.Text))
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ3.Text));
+
+                if (CheckBoxZ4.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ4.Text))
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ4.Text));
+
+                if (CheckBoxZ5.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ5.Text))
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ5.Text));
+
+                ModelContainer.Children.Clear();
+                currentVectorMarker = null;
+
+                if (activeMeshes.Count == 0)
+                {
+                    FluxResult.Text = "Поток Ф = 0.00";
+                    AreaResult.Text = "Площадь S = 0.00";
+                    return;
+                }
+
+                if (CheckBoxMergeSurfaces.IsChecked == true)
+                {
+                    var fullCombinedMesh = CombineMultipleMeshes(activeMeshes);
+                    ProcessAndRenderSurface(fullCombinedMesh);
+                }
+                else
+                {
+                    foreach (var mesh in activeMeshes)
+                    {
+                        ProcessAndRenderSurface(mesh);
+                    }
+                }
+
+                if (CbDrawAsSecond != null && CbDrawAsSecond.IsChecked == true)
+                {
+                    var wallMesh = GenerateConditionWallMesh();
+                    if (wallMesh != null && wallMesh.Positions.Count > 0)
+                    {
+                        var ghostMaterial = MaterialHelper.CreateMaterial(Colors.DarkOrange, 0.25);
+                        var ghostModel = new WpfMedia.GeometryModel3D(wallMesh, ghostMaterial) { BackMaterial = ghostMaterial };
+                        ModelContainer.Children.Add(new WpfMedia.ModelVisual3D { Content = ghostModel });
+                    }
+                }
+
+                Viewport.ZoomExtents();
             };
             currentSurfaceGenerator.Invoke();
         }
