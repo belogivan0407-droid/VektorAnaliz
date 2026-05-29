@@ -25,11 +25,20 @@ namespace Vektoranaliz
         public MainWindow()
         {
             InitializeComponent();
-            // Запуск без отрисовки, так как поля теперь пустые
-            Loaded += (s, e) => { /* Можно оставить пустым или вывести подсказку */ };
+            Loaded += (s, e) => { };
         }
 
         private Vector3 V3(double x, double y, double z) => new Vector3((float)x, (float)y, (float)z);
+
+        // --- Метод для считывания выбранной точности сетки ---
+        private int GetResolution()
+        {
+            if (CbResolution == null) return 150;
+            if (CbResolution.SelectedIndex == 0) return 100; // Обычная
+            if (CbResolution.SelectedIndex == 1) return 200; // Высокая
+            if (CbResolution.SelectedIndex == 2) return 300; // Максимальная
+            return 150;
+        }
 
         private WpfMedia.MeshGeometry3D ConvertMesh(HelixGeo.MeshGeometry3D hMesh)
         {
@@ -71,24 +80,25 @@ namespace Vektoranaliz
             string helpText =
                 "РУКОВОДСТВО ПОЛЬЗОВАТЕЛЯ: ВЕКТОРНЫЙ АНАЛИЗ\n\n" +
         "1. ЗАДАНИЕ ВЕКТОРНОГО ПОЛЯ A(x,y,z):\n" +
-        "Введите выражения для компонент поля Ax, Ay, Az. Допускается использование переменных x, y, z и функций (sin, cos, exp, sqrt, abs, pi).\n" +
-        "Пример: 2x, xy, sin(x^2).\n\n" +
-        "2. ПОСТРОЕНИЕ ПОВЕРХНОСТИ:\n" +
-        "- 'Свои поверхности': введите уравнения. Можно включить до 5 поверхностей одновременно. Галочка 'Объединить' позволяет сшить их в единое тело для расчета общего потока.\n" +
-        "- 'Шаблоны': выберите готовое тело (сфера, конус и т.д.). Укажите параметры a, b, c для задания размеров.\n\n" +
-        "3. ОГРАНИЧЕНИЯ (ОТРАСЕЛЬ):\n" +
-        "В поле 'Ограничение' введите неравенство, которое отсекает область (например: x^2 + y^2 <= 4).\n" +
-        "Программа вырежет из поверхности только тот кусок, где условие выполняется (True).\n\n" +
-        "4. РАСЧЕТЫ И АНАЛИЗ:\n" +
-        "- 'Пересчитать поток': запускает алгоритм численного интегрирования. Вычисляется поток Ф через всю видимую поверхность.\n" +
-        "- Площадь (S): суммарная площадь всех полигонов, попавших в область.\n" +
-        "- Анализ точки: Наведите курсор на 3D-модель. Панель 'Данные в точке курсора' покажет вектор нормали n, вектор поля A и плотность потока (A·n) в конкретной точке.\n\n" +
-        "5. ИНТЕРПРЕТАЦИЯ ЦВЕТА:\n" +
-        "Поверхность окрашивается градиентом:\n" +
-        "- КРАСНЫЙ: поток вытекает (A·n > 0).\n" +
-        "- СИНИЙ: поток втекает (A·n < 0).\n" +
-        "- БЕЛЫЙ: поток равен 0 (вектор поля касается поверхности).\n\n" +
-        "Ориентация нормали в меню определяет, какая сторона поверхности считается 'внешней'.";
+        "- Введите выражения для компонент поля Ax, Ay, Az. Поддерживаются переменные x, y, z и функции (sin, cos, exp, sqrt, abs, pi, x^2).\n" +
+        "- Программа понимает слитную запись (2x, xy) и стандартную математическую логику.\n\n" +
+        "2. ПОСТРОЕНИЕ ПОВЕРХНОСТЕЙ И ЗАМЫКАНИЕ:\n" +
+        "- Программа строит поверхности, заданные явной функцией z = f(x,y). Можно включить до 5 поверхностей (z1-z5) одновременно.\n" +
+        "- Галочка 'Объединить в одну фигуру': сшивает все активные поверхности в единое 3D-тело. Незаменима для расчета суммарного потока через замкнутые объемы (проверка теоремы Гаусса-Остроградского).\n" +
+        "- Галочка '↓ Нормаль': математически инвертирует вектор нормали для конкретной части поверхности. По умолчанию нормаль функции z=f(x,y) направлена вверх. Чтобы корректно замкнуть фигуру снизу (сделать нормаль дна внешней), включите эту галочку.\n" +
+        "- Подсказка: Строго вертикальные стенки (например, цилиндр x^2+y^2=R^2) нельзя построить напрямую функцией z=f(x,y). Для их моделирования 'положите' фигуру на бок, поменяв местами координаты (например, Y и Z) в уравнениях и векторном поле.\n\n" +
+        "3. ОГРАНИЧЕНИЯ (ОБЛАСТЬ ИНТЕГРИРОВАНИЯ):\n" +
+        "- Введите логическое неравенство для проекции на плоскость (например: x^2 + y^2 <= 4 and x >= 0). Программа физически обрежет 3D-модель по этим границам с помощью алгоритма марширующих треугольников.\n\n" +
+        "4. РЕЗУЛЬТАТЫ И ТЕПЛОВАЯ КАРТА (ВИЗУАЛИЗАЦИЯ ПОТОКА):\n" +
+        "- Программа численно вычисляет площадь (S) и суммарный поверхностный интеграл второго рода (Ф).\n" +
+        "- 3D-модель окрашивается в тепловую карту, которая показывает локальную плотность потока (скалярное произведение A·n) в каждой точке поверхности:\n" +
+        "  🔴 КРАСНЫЙ / ОРАНЖЕВЫЙ: поток ВЫТЕКАЕТ (A·n > 0). Вектор поля направлен наружу.\n" +
+        "  🔵 СИНИЙ / ГОЛУБОЙ: поток ВТЕКАЕТ (A·n < 0). Вектор поля бьет снаружи внутрь поверхности.\n" +
+        "  ⚪ СВЕТЛО-ЖЕЛТЫЙ / БЕЛЫЙ: нулевой поток (A·n ≈ 0). Вектор поля скользит по касательной к поверхности.\n\n" +
+        "5. ИНТЕРАКТИВНЫЙ АНАЛИЗ:\n" +
+        "- Наведите курсор мыши на любую точку 3D-модели. В панели справа отобразятся координаты точки, вектор локальной нормали, вектор поля и числовое значение плотности потока. На самой модели появится желтая стрелка, показывающая истинное направление векторного поля в этой точке.\n\n" +
+        "6. ТОЧНОСТЬ И ПОГРЕШНОСТЬ:\n" +
+        "- Используйте выпадающий список 'Точность сетки'. При выборе 'Максимальная' программа генерирует высокополигональную сетку (сотни тысяч треугольников). Это сводит погрешность аппроксимации кривых поверхностей к минимуму, однако расчет может занять от 3 до 5 секунд.";
 
             MessageBox.Show(helpText, "Инструкция к программе", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -163,7 +173,6 @@ namespace Vektoranaliz
             catch { return new WpfMedia.Vector3D(0, 0, 0); }
         }
 
-        // --- МАТЕМАТИКА 1: Границы по области определения функции (NaN) ---
         private WpfMedia.Point3D FindExactBoundary(double badX, double badY, double goodX, double goodY, NCalc.Expression expr)
         {
             double lastZ = 0;
@@ -181,12 +190,12 @@ namespace Vektoranaliz
             return new WpfMedia.Point3D(goodX, goodY, lastZ);
         }
 
-        private WpfMedia.MeshGeometry3D GenerateCustomMesh(string formula)
+        private WpfMedia.MeshGeometry3D GenerateCustomMesh(string formula, bool flipNormal = false)
         {
             if (string.IsNullOrWhiteSpace(formula)) return null;
             var wMesh = new WpfMedia.MeshGeometry3D();
 
-            int uRes = 150, vRes = 150;
+            int uRes = GetResolution(), vRes = GetResolution();
             double minX = -4.0, maxX = 4.0, minY = -4.0, maxY = 4.0;
 
             NCalc.Expression surfExpr;
@@ -259,14 +268,21 @@ namespace Vektoranaliz
                     bool v1 = isValid[i, j] || isEdge[i, j], v2 = isValid[i, j + 1] || isEdge[i, j + 1];
                     bool v3 = isValid[i + 1, j] || isEdge[i + 1, j], v4 = isValid[i + 1, j + 1] || isEdge[i + 1, j + 1];
 
-                    if (v1 && v2 && v3) { wMesh.TriangleIndices.Add(p1); wMesh.TriangleIndices.Add(p2); wMesh.TriangleIndices.Add(p3); }
-                    if (v2 && v4 && v3) { wMesh.TriangleIndices.Add(p2); wMesh.TriangleIndices.Add(p4); wMesh.TriangleIndices.Add(p3); }
+                    if (flipNormal) // МАТЕМАТИЧЕСКИЙ ПЕРЕВОРОТ НОРМАЛИ
+                    {
+                        if (v1 && v2 && v3) { wMesh.TriangleIndices.Add(p1); wMesh.TriangleIndices.Add(p3); wMesh.TriangleIndices.Add(p2); }
+                        if (v2 && v4 && v3) { wMesh.TriangleIndices.Add(p2); wMesh.TriangleIndices.Add(p3); wMesh.TriangleIndices.Add(p4); }
+                    }
+                    else // Стандартный обход
+                    {
+                        if (v1 && v2 && v3) { wMesh.TriangleIndices.Add(p1); wMesh.TriangleIndices.Add(p2); wMesh.TriangleIndices.Add(p3); }
+                        if (v2 && v4 && v3) { wMesh.TriangleIndices.Add(p2); wMesh.TriangleIndices.Add(p4); wMesh.TriangleIndices.Add(p3); }
+                    }
                 }
             }
             return wMesh;
         }
 
-        // --- МАТЕМАТИКА 2: Идеальный срез по условиям отсечения (Marching Triangles) ---
         private bool CheckCond(double x, double y, double z, NCalc.Expression condExpr)
         {
             if (condExpr == null) return true;
@@ -279,7 +295,7 @@ namespace Vektoranaliz
         {
             WpfMedia.Point3D good = pGood;
             WpfMedia.Point3D bad = pBad;
-            for (int i = 0; i < 12; i++) // 12 шагов = микроскопическая точность среза
+            for (int i = 0; i < 12; i++)
             {
                 WpfMedia.Point3D mid = new WpfMedia.Point3D((good.X + bad.X) / 2.0, (good.Y + bad.Y) / 2.0, (good.Z + bad.Z) / 2.0);
                 if (CheckCond(mid.X, mid.Y, mid.Z, condExpr)) good = mid;
@@ -315,12 +331,12 @@ namespace Vektoranaliz
 
                 int count = (v1 ? 1 : 0) + (v2 ? 1 : 0) + (v3 ? 1 : 0);
 
-                if (count == 3) // Треугольник полностью внутри ограничения
+                if (count == 3)
                 {
                     resultMesh.Positions.Add(p1); resultMesh.Positions.Add(p2); resultMesh.Positions.Add(p3);
                     resultMesh.TriangleIndices.Add(idx++); resultMesh.TriangleIndices.Add(idx++); resultMesh.TriangleIndices.Add(idx++);
                 }
-                else if (count == 1) // 1 хорошая точка, 2 плохие -> Образует 1 маленький треугольник
+                else if (count == 1)
                 {
                     WpfMedia.Point3D pGood = v1 ? p1 : (v2 ? p2 : p3);
                     WpfMedia.Point3D pNext = v1 ? p2 : (v2 ? p3 : p1);
@@ -332,7 +348,7 @@ namespace Vektoranaliz
                     resultMesh.Positions.Add(pGood); resultMesh.Positions.Add(e1); resultMesh.Positions.Add(e2);
                     resultMesh.TriangleIndices.Add(idx++); resultMesh.TriangleIndices.Add(idx++); resultMesh.TriangleIndices.Add(idx++);
                 }
-                else if (count == 2) // 2 хорошие точки, 1 плохая -> Образует четырехугольник (2 треугольника)
+                else if (count == 2)
                 {
                     WpfMedia.Point3D pBad = !v1 ? p1 : (!v2 ? p2 : p3);
                     WpfMedia.Point3D pNext = !v1 ? p2 : (!v2 ? p3 : p1);
@@ -401,7 +417,6 @@ namespace Vektoranaliz
             idx += 4;
         }
 
-        // Вспомогательный метод для склеивания массива сеток в единую математическую модель
         private WpfMedia.MeshGeometry3D CombineMultipleMeshes(List<WpfMedia.MeshGeometry3D> meshes)
         {
             var combined = new WpfMedia.MeshGeometry3D();
@@ -424,7 +439,7 @@ namespace Vektoranaliz
             var cutMesh = ApplyCondition(rawMesh);
             currentMesh = cutMesh;
 
-            if (cutMesh.Positions.Count == 0 || !UpdateVectorFieldExpressions()) return; // Убрана очистка контейнера здесь, чтобы не ломать цикл
+            if (cutMesh.Positions.Count == 0 || !UpdateVectorFieldExpressions()) return;
 
             int sign = CbNormalDir != null && CbNormalDir.SelectedIndex == 0 ? 1 : -1;
             double totalFlux = 0;
@@ -445,9 +460,8 @@ namespace Vektoranaliz
                 double area = cross.Length * 0.5;
                 totalArea += area;
 
-                // --- ЗАЩИТА ОТ ПОЛЮСОВ ---
                 var n = cross;
-                if (n.Length < 1e-6) n = new WpfMedia.Vector3D(0, 0, 1); // Безопасная нормаль
+                if (n.Length < 1e-6) n = new WpfMedia.Vector3D(0, 0, 1);
                 else n.Normalize();
                 n *= sign;
 
@@ -458,7 +472,6 @@ namespace Vektoranaliz
                 double cx = (p1.X + p2.X + p3.X) / 3.0, cy = (p1.Y + p2.Y + p3.Y) / 3.0, cz = (p1.Z + p2.Z + p3.Z) / 3.0;
                 var fieldA = EvaluateVectorField(cx, cy, cz);
 
-                // Добавляем только если результат расчета поля не NaN
                 double partialFlux = (fieldA.X * n.X + fieldA.Y * n.Y + fieldA.Z * n.Z) * area;
                 if (!double.IsNaN(partialFlux)) totalFlux += partialFlux;
             }
@@ -559,7 +572,6 @@ namespace Vektoranaliz
             ModelContainer.Children.Add(currentVectorMarker);
         }
 
-        // Обновленная логика построения своих поверхностей (Поддержка до 5 штук и объединения)
         private void AddCustomSurface_Click(object sender, RoutedEventArgs e)
         {
             currentSurfaceGenerator = () =>
@@ -567,19 +579,19 @@ namespace Vektoranaliz
                 var activeMeshes = new List<WpfMedia.MeshGeometry3D>();
 
                 if (CheckBoxZ1.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ1.Text))
-                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ1.Text));
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ1.Text, FlipZ1.IsChecked == true));
 
                 if (CheckBoxZ2.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ2.Text))
-                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ2.Text));
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ2.Text, FlipZ2.IsChecked == true));
 
                 if (CheckBoxZ3.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ3.Text))
-                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ3.Text));
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ3.Text, FlipZ3.IsChecked == true));
 
                 if (CheckBoxZ4.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ4.Text))
-                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ4.Text));
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ4.Text, FlipZ4.IsChecked == true));
 
                 if (CheckBoxZ5.IsChecked == true && !string.IsNullOrWhiteSpace(TextBoxZ5.Text))
-                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ5.Text));
+                    activeMeshes.Add(GenerateCustomMesh(TextBoxZ5.Text, FlipZ5.IsChecked == true));
 
                 ModelContainer.Children.Clear();
                 currentVectorMarker = null;
@@ -626,7 +638,7 @@ namespace Vektoranaliz
         private void AddEllipsoid_Click(object sender, RoutedEventArgs e)
         {
             currentSurfaceGenerator = () => {
-                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = 80, vRes = 80;
+                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = GetResolution(), vRes = GetResolution();
                 double a = GetParam(TbA, 2.0), b = GetParam(TbB, 2.0), c = GetParam(TbC, 2.0);
                 for (int i = 0; i <= uRes; i++)
                 {
@@ -640,7 +652,7 @@ namespace Vektoranaliz
         private void AddOneSheetHyperboloid_Click(object sender, RoutedEventArgs e)
         {
             currentSurfaceGenerator = () => {
-                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = 80, vRes = 80; double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0), c = GetParam(TbC, 1.2);
+                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = GetResolution(), vRes = GetResolution(); double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0), c = GetParam(TbC, 1.2);
                 for (int i = 0; i <= uRes; i++)
                 {
                     double u = -1.2 + 2.4 * i / uRes;
@@ -653,7 +665,7 @@ namespace Vektoranaliz
         private void AddTwoSheetHyperboloid_Click(object sender, RoutedEventArgs e)
         {
             currentSurfaceGenerator = () => {
-                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = 40, vRes = 80; double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0), c = GetParam(TbC, 1.0);
+                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = GetResolution() / 2, vRes = GetResolution(); double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0), c = GetParam(TbC, 1.0);
                 for (int i = 0; i <= uRes; i++) { double u = 0.0 + 1.3 * i / uRes; for (int j = 0; j <= vRes; j++) wMesh.Positions.Add(new WpfMedia.Point3D(a * Math.Sinh(u) * Math.Cos(2 * Math.PI * j / vRes), b * Math.Sinh(u) * Math.Sin(2 * Math.PI * j / vRes), c * Math.Cosh(u))); }
                 BuildGridIndices(wMesh, uRes, vRes, false); int offset = wMesh.Positions.Count;
                 for (int i = 0; i <= uRes; i++) { double u = 0.0 + 1.3 * i / uRes; for (int j = 0; j <= vRes; j++) wMesh.Positions.Add(new WpfMedia.Point3D(a * Math.Sinh(u) * Math.Cos(2 * Math.PI * j / vRes), b * Math.Sinh(u) * Math.Sin(2 * Math.PI * j / vRes), -c * Math.Cosh(u))); }
@@ -664,7 +676,7 @@ namespace Vektoranaliz
         private void AddEllipticCone_Click(object sender, RoutedEventArgs e)
         {
             currentSurfaceGenerator = () => {
-                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = 80, vRes = 80; double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0), c = GetParam(TbC, 1.0);
+                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = GetResolution(), vRes = GetResolution(); double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0), c = GetParam(TbC, 1.0);
                 for (int i = 0; i <= uRes; i++) { double u = -1.5 + 3.0 * i / uRes; for (int j = 0; j <= vRes; j++) wMesh.Positions.Add(new WpfMedia.Point3D(a * u * Math.Cos(2 * Math.PI * j / vRes), b * u * Math.Sin(2 * Math.PI * j / vRes), c * u)); }
                 BuildGridIndices(wMesh, uRes, vRes, false); SetupNewSurface(wMesh);
             }; currentSurfaceGenerator.Invoke();
@@ -673,7 +685,7 @@ namespace Vektoranaliz
         private void AddParaboloid_Click(object sender, RoutedEventArgs e)
         {
             currentSurfaceGenerator = () => {
-                var wMesh = new WpfMedia.MeshGeometry3D(); int res = 80; double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0), c = GetParam(TbC, 2.0);
+                var wMesh = new WpfMedia.MeshGeometry3D(); int res = GetResolution(); double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0), c = GetParam(TbC, 2.0);
                 for (int i = 0; i <= res; i++) { double r = c * i / res; for (int j = 0; j <= res; j++) { double x = r * Math.Cos(2 * Math.PI * j / res); double y = r * Math.Sin(2 * Math.PI * j / res); wMesh.Positions.Add(new WpfMedia.Point3D(x, y, (x * x) / (a * a) + (y * y) / (b * b))); } }
                 BuildGridIndices(wMesh, res, res, false); SetupNewSurface(wMesh);
             }; currentSurfaceGenerator.Invoke();
@@ -682,7 +694,7 @@ namespace Vektoranaliz
         private void AddHyperbolicParaboloid_Click(object sender, RoutedEventArgs e)
         {
             currentSurfaceGenerator = () => {
-                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = 80, vRes = 80; double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0);
+                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = GetResolution(), vRes = GetResolution(); double a = GetParam(TbA, 1.0), b = GetParam(TbB, 1.0);
                 for (int i = 0; i <= uRes; i++) { double x = -2.0 + 4.0 * i / uRes; for (int j = 0; j <= vRes; j++) { double y = -2.0 + 4.0 * j / vRes; wMesh.Positions.Add(new WpfMedia.Point3D(x, y, (x * x) / (a * a) - (y * y) / (b * b))); } }
                 BuildGridIndices(wMesh, uRes, vRes, false); SetupNewSurface(wMesh);
             }; currentSurfaceGenerator.Invoke();
@@ -691,7 +703,7 @@ namespace Vektoranaliz
         private void AddEllipticCylinder_Click(object sender, RoutedEventArgs e)
         {
             currentSurfaceGenerator = () => {
-                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = 80, vRes = 80; double a = GetParam(TbA, 1.5), b = GetParam(TbB, 1.0);
+                var wMesh = new WpfMedia.MeshGeometry3D(); int uRes = GetResolution(), vRes = GetResolution(); double a = GetParam(TbA, 1.5), b = GetParam(TbB, 1.0);
                 for (int i = 0; i <= uRes; i++) { double z = -3.0 + 6.0 * i / uRes; for (int j = 0; j <= vRes; j++) wMesh.Positions.Add(new WpfMedia.Point3D(a * Math.Cos(2 * Math.PI * j / vRes), b * Math.Sin(2 * Math.PI * j / vRes), z)); }
                 BuildGridIndices(wMesh, uRes, vRes, false); SetupNewSurface(wMesh);
             }; currentSurfaceGenerator.Invoke();

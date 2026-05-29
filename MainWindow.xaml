@@ -37,10 +37,17 @@
                         </StackPanel>
                     </Border>
 
-                    <TextBlock Text="Ориентация нормали:" FontWeight="Bold" Margin="0,5,0,2"/>
-                    <ComboBox x:Name="CbNormalDir" SelectedIndex="0" Height="25" Margin="0,0,0,10">
+                    <TextBlock Text="Ориентация нормали (глобальная):" FontWeight="Bold" Margin="0,5,0,2"/>
+                    <ComboBox x:Name="CbNormalDir" SelectedIndex="0" Height="25" Margin="0,0,0,5">
                         <ComboBoxItem Content="Внешняя (+)" />
                         <ComboBoxItem Content="Внутренняя (-)" />
+                    </ComboBox>
+
+                    <TextBlock Text="Точность сетки (выше = дольше расчет):" FontWeight="Bold" Margin="0,5,0,2"/>
+                    <ComboBox x:Name="CbResolution" SelectedIndex="1" Height="25" Margin="0,0,0,10" ToolTip="Определяет плотность разбиения 3D-модели на полигоны">
+                        <ComboBoxItem Content="Обычная (быстрая, 100x100)" />
+                        <ComboBoxItem Content="Высокая (рекомендуется, 200x200)" />
+                        <ComboBoxItem Content="Максимальная (очень долго, 300x300)" />
                     </ComboBox>
 
                     <Button Content="ПЕРЕСЧИТАТЬ ПОТОК И ГЕОМЕТРИЮ" Click="Recalculate_Click" Margin="0,5" Height="40" Background="#90EE90" FontWeight="Bold" FontSize="14"/>
@@ -58,23 +65,28 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,2">
                         <CheckBox x:Name="CheckBoxZ1" Content="z1 =" IsChecked="False" VerticalAlignment="Center" Width="50" FontWeight="Bold" Foreground="DodgerBlue"/>
-                        <TextBox x:Name="TextBoxZ1" Text="" Width="285" Height="25"/>
+                        <TextBox x:Name="TextBoxZ1" Text="" Width="195" Height="25"/>
+                        <CheckBox x:Name="FlipZ1" Content="↓ Нормаль" VerticalAlignment="Center" Margin="10,0,0,0" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,2">
                         <CheckBox x:Name="CheckBoxZ2" Content="z2 =" IsChecked="False" VerticalAlignment="Center" Width="50" FontWeight="Bold" Foreground="LimeGreen"/>
-                        <TextBox x:Name="TextBoxZ2" Text="" Width="285" Height="25"/>
+                        <TextBox x:Name="TextBoxZ2" Text="" Width="195" Height="25"/>
+                        <CheckBox x:Name="FlipZ2" Content="↓ Нормаль" VerticalAlignment="Center" Margin="10,0,0,0" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,2">
                         <CheckBox x:Name="CheckBoxZ3" Content="z3 =" IsChecked="False" VerticalAlignment="Center" Width="50" FontWeight="Bold" Foreground="Orange"/>
-                        <TextBox x:Name="TextBoxZ3" Text="" Width="285" Height="25"/>
+                        <TextBox x:Name="TextBoxZ3" Text="" Width="195" Height="25"/>
+                        <CheckBox x:Name="FlipZ3" Content="↓ Нормаль" VerticalAlignment="Center" Margin="10,0,0,0" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,2">
                         <CheckBox x:Name="CheckBoxZ4" Content="z4 =" IsChecked="False" VerticalAlignment="Center" Width="50" FontWeight="Bold" Foreground="Purple"/>
-                        <TextBox x:Name="TextBoxZ4" Text="" Width="285" Height="25"/>
+                        <TextBox x:Name="TextBoxZ4" Text="" Width="195" Height="25"/>
+                        <CheckBox x:Name="FlipZ4" Content="↓ Нормаль" VerticalAlignment="Center" Margin="10,0,0,0" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,5">
                         <CheckBox x:Name="CheckBoxZ5" Content="z5 =" IsChecked="False" VerticalAlignment="Center" Width="50" FontWeight="Bold" Foreground="Crimson"/>
-                        <TextBox x:Name="TextBoxZ5" Text="" Width="285" Height="25"/>
+                        <TextBox x:Name="TextBoxZ5" Text="" Width="195" Height="25"/>
+                        <CheckBox x:Name="FlipZ5" Content="↓ Нормаль" VerticalAlignment="Center" Margin="10,0,0,0" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"/>
                     </StackPanel>
 
                     <Button Content="Построить свои поверхности" Click="AddCustomSurface_Click" Margin="0,2" Height="30" Background="#BDD7EE" FontWeight="Bold"/>
